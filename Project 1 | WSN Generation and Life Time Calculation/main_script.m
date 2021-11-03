@@ -62,4 +62,21 @@ grid on
 xlabel('no. of cycle');
 ylabel('no. of active nodes');
 title('The number of active nodes at each cycle');
+%% Find the lifetimes T1, T2, T3
+T1 = find(active_nodes < 100, 1);
+T2 = find(active_nodes < 50, 1);
+T3 = find (active_nodes == 0, 1);
 
+figure('Name', 'Curve of Active Nodes with lifetimes')
+plot(linspace(1,length(active_nodes),length(active_nodes)), active_nodes);
+grid on
+hold on
+plot(T1, active_nodes(T1),'r*');
+hold on
+plot(T2, active_nodes(T2),'m*');
+hold on
+plot(T3, active_nodes(T3),'k*');
+xlabel('no. of cycle');
+ylabel('no. of active nodes');
+legend('no. active nodes','T1', 'T2','T3');
+title('The number of active nodes at each cycle');
