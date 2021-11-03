@@ -9,7 +9,7 @@ eta_long = 0.0013;  %nJ/bit/m4;
 d0 = sqrt(eta_short/eta_long); 
 E_initial = 2e9; % in nJ (the starting energy)
 E_elec = 50; E_agg = 50;
-k = 625*1024; %number_of_bits per cycle
+k = 625*8; %number_of_bits per cycle
 func_tx_energy = @(E,eta,exp,d) max(0, E - (k*(E_elec + E_agg) + k*eta*d^exp));
 func_rx_energy = @(E) max(0, E - (k*(E_elec+E_agg)));
 
