@@ -11,7 +11,7 @@ E_initial = 2e9; % in nJ (the starting energy)
 E_elec = 50; E_agg = 50;
 k = 625*8; %number_of_bits per cycle
 func_tx_energy = @(E,eta,exp,d) max(0, E - (k*(E_elec + E_agg) + k*eta*d^exp));
-func_rx_energy = @(E) max(0, E - (k*(E_elec+E_agg)));
+func_rx_energy = @(E, n) max(0, E - (n*k*E_elec));
 
 %% Generating the location of senssors
 locs = cat(1, randperm(area_width), randperm(area_height))';
@@ -22,18 +22,22 @@ for i=1:size(locs,2)
     end
 end
 % Add the sink node @ the network center
-figure('Name', 'Network Topology')
+f1 = figure('Name', 'Network Topology');
 scatter(locs(:,1),locs(:,2));
 hold on
 scatter(50,50,'filled');
 locs = cat(1, locs, [50, 50]);
 legend('source', 'sink');
+title('Network Topology');
+xlabel('distance on x-axis');
+ylabel('distance on y-axis');
+saveas(f1, [pwd '/Figures/network_topology']);
 %% Calculate the distances
 dists = sqrt(sum((locs-[50 50]).^2,2));
 %% Initiate the energy
 energy = E_initial*ones(1,N+1);
 %% GO on cycles!
-active_nodes =[];
+active_nodes =(N);
 
 while 1
     % Calculate the dissipated & remaining energy
@@ -45,29 +49,35 @@ for i=1:N
         energy(i) = func_tx_energy(energy(i), eta_long, 4, dist);
     end
 end
-energy(N+1) = func_rx_energy(energy(N+1));
+energy(N+1) = func_rx_energy(energy(N+1), active_nodes(end));
     % Get the no. of active nodes
-    rx_threshold = k*(E_elec+E_agg);
-    tx_threshold = rx_threshold + k*eta_short*0.5^2;
+tx_threshold = k*(E_elec+E_agg) + k*eta_short*1^2;
 active_nodes = cat(2, active_nodes, sum(energy(1:N) >= tx_threshold));
 
+rx_threshold = k*E_elec;
 if active_nodes(end) == 0 || energy(N+1) < rx_threshold
     break;
 end
 end
-    
-figure('Name', 'Curve of Active Nodes')
+ % remove the first element in the active_nodes vector (intialization)
+ active_nodes = active_nodes(2:end);
+f2 = figure('Name', 'Curve of Active Nodes');
 plot(linspace(1,length(active_nodes),length(active_nodes)), active_nodes);
 grid on
 xlabel('no. of cycle');
 ylabel('no. of active nodes');
 title('The number of active nodes at each cycle');
+saveas(f2, [pwd '/Figures/curve of active nodes']);
 %% Find the lifetimes T1, T2, T3
 T1 = find(active_nodes < 100, 1);
 T2 = find(active_nodes < 50, 1);
 T3 = find (active_nodes == 0, 1);
 
-figure('Name', 'Curve of Active Nodes with lifetimes')
+if isempty(T3) % in case of the death of the sink before one of the source nodes
+   T3 = length(active_nodes); 
+end
+
+f3= figure('Name', 'Curve of Active Nodes with lifetimes');
 plot(linspace(1,length(active_nodes),length(active_nodes)), active_nodes);
 grid on
 hold on
@@ -80,3 +90,4 @@ xlabel('no. of cycle');
 ylabel('no. of active nodes');
 legend('no. active nodes','T1', 'T2','T3');
 title('The number of active nodes at each cycle');
+saveas(f3, [pwd '/Figures/curve of active nodes with lifetimes']);
