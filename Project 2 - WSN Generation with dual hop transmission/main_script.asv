@@ -121,8 +121,8 @@ title('Remaining energies of the N nodes after T1 cycles')
 
 %% Relation between R and T1
 % We're going to repeat the previous procedure with a range of R values
-% Rmax = 25*sqrt(2) since that the area is a square 100*100
-Rmax = 25*sqrt(2);
+% Rmax = 50*sqrt(2) since that the area is a square 100*100
+Rmax = 50*sqrt(2);
 Rs = 10:10:Rmax;
 T1s = [];  % a vector to save T1 values
 for R = Rs
@@ -174,5 +174,5 @@ end
 
     % (3) Get T1 for R
     T1 = find(active_nodes < N, 1);
-    T1s = cat(2, T1s, T1);
+    
 end
