@@ -10,7 +10,7 @@ d0 = sqrt(eta_short/eta_long);
 E_initial = 2e9; % in nJ (the starting energy)
 E_elec = 50; E_agg = 50;
 k = 625*8; %number_of_bits per cycle
-R = 30; %threshold for one-hop/dual-hop transmission
+R = 30;  %threshold for one-hop/dual-hop transmission
 
 func_tx_energy = @(E,eta,exp,d) max(0, E - (k*(E_elec + E_agg) + k*eta*d^exp));
 func_rx_energy = @(E, n) max(0, E - (n*k*E_elec));
@@ -121,8 +121,8 @@ title('Remaining energies of the N nodes after T1 cycles')
 
 %% Relation between R and T1
 % We're going to repeat the previous procedure with a range of R values
-% Rmax = 25*sqrt(2) since that the area is a square 100*100
-Rmax = 25*sqrt(2);
+% Rmax = 50*sqrt(2) since that the area is a square 100*100
+Rmax = 50*sqrt(2);
 Rs = 10:10:Rmax;
 T1s = [];  % a vector to save T1 values
 for R = Rs
