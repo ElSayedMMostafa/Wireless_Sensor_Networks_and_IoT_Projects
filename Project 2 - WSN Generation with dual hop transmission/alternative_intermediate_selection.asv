@@ -32,6 +32,5 @@ for i = 1:5
     dists_sum(min_Index(i)) = inf;
 end
 [~, max_Index] = max(remaining_enrgies(min_Index)); 
-max_Index = min_Index(max_Index);
 dist_to_node = dists_to_node(max_Index);
 end

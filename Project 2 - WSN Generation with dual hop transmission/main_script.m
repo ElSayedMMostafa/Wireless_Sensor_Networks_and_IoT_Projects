@@ -36,6 +36,13 @@ ylabel('distance on y-axis');
 % saveas(f1, [pwd '/Figures/network_topology_Sink_Centered']);
 %% Calculate the distances
 dists = sqrt(sum((locs-[50 50]).^2,2));
+%% Sort Nodes according to Distances
+[dists, ids] = sort(dists);
+locs = locs(ids,:);
+%% remove sink to end of vectors
+dists = [dists(2:end); dists(1)];
+locs = [locs(2:end,:); locs(1,:)];
+
 %% GO on cycles! (1)
     % Initiate the energy
  energy = E_initial*ones(1,N+1);
@@ -162,8 +169,8 @@ for i=1:N
 end
 energy(t,N+1) = func_rx_energy(energy(t-1,N+1), active_nodes(end));
     % Get the no. of active nodes
-tx_threshold = k*(E_elec+E_agg) + k*eta_short*1^2;
-active_nodes = cat(2, active_nodes, sum(energy(t,1:N) >= tx_threshold));
+tx_threshold = 0;
+active_nodes = cat(2, active_nodes, sum(energy(t,1:N) > tx_threshold));
 
 rx_threshold = k*E_elec;
 if active_nodes(end) == 0 || energy(t,N+1) < rx_threshold
@@ -202,6 +209,14 @@ ylabel('distance on y-axis');
 %% Calculate the distances
 dists = sqrt(sum((locs-sink).^2,2));
 R = 30; %for the sake of comparison with part B [The initial topology]
+%% Calculate the distances
+dists = sqrt(sum((locs-[50 50]).^2,2));
+%% Sort Nodes according to Distances
+[dists, ids] = sort(dists);
+locs = locs(ids,:);
+%% remove sink to end of vectors
+dists = [dists(2:end); dists(1)];
+locs = [locs(2:end,:); locs(1,:)];
 %% GO on cycles!
 active_nodes =(N);
 % Initiate the energy
@@ -328,8 +343,8 @@ for i=1:N
 end
 energy(t,N+1) = func_rx_energy(energy(t-1,N+1), active_nodes(end));
     % Get the no. of active nodes
-tx_threshold = k*(E_elec+E_agg) + k*eta_short*1^2;
-active_nodes = cat(2, active_nodes, sum(energy(t,1:N) >= tx_threshold));
+tx_threshold = 0;
+active_nodes = cat(2, active_nodes, sum(energy(t,1:N) > tx_threshold));
 
 rx_threshold = k*E_elec;
 if active_nodes(end) == 0 || energy(t,N+1) < rx_threshold
@@ -365,7 +380,8 @@ for i=1:N
     dist = dists(i);
     if dist > R_opt
         %[sending_index, dist_to_node] = alternative_intermediate_selection(i, locs(1:end-1, :), dists(1:end-1));
-        [sending_index, dist_to_node] = alternative_intermediate_selection(i, locs(1:end-1, :), energy(t-1,1:end-1)');
+        %[sending_index, dist_to_node] = alternative_intermediate_selection(i, locs(1:end-1, :), energy(t-1,1:end-1)');
+        [sending_index, dist_to_node] = alternative_intermediate_selection(i, locs(1:end-1, :), dists(1:end-1), energy(t-1,1:end-1)');
         % Transmission between node and intermediate
         if dist_to_node <= d0 
             energy(t,i) = func_tx_energy(energy(t-1,i), eta_short, 2, dist_to_node);
@@ -421,7 +437,7 @@ legend('no. active nodes','T1');
 title('The number of active nodes at each cycle - alternative criteria');
 %saveas(f11, [pwd '/Figures/curve of active nodes with 1st lifetimes']);
 
-%% Plotting the remaining energies at T1 cycles
+    %% Plotting the remaining energies at T1 cycles
 energy_T1 = energy(T1+1, :);
 f12 = figure('Name','Remaining energies of the N nodes after T1 cycles - alternative criteria');
 stem(linspace(1,N,N),energy_T1(1:end-1),"filled")
