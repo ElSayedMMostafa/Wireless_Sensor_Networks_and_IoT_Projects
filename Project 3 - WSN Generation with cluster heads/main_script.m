@@ -47,4 +47,4 @@ locs = [locs(2:end,:); locs(1,:)];
     % Initiate the energy
 energy = E_initial*ones(1,N+1);
 active_nodes =(N);
-heads = CH_election(5, 5, energy, locs, dists, d0);
+[assigned_heads,result_energies]  = CH_election(5, 5, energy(1:end-1), locs(1:end-1,:), dists(1:end-1), d0);

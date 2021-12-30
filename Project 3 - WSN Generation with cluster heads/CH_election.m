@@ -1,4 +1,4 @@
-function heads = CH_election(C, portion, energies, locations, distances, do)
+function [assigned_heads,result_energies] = CH_election(C, portion, energies, locations, distances, do)
 % This function perform the election of cluster heads.
 % @ Inputs:
     % C: The number of cycles for the heads
@@ -9,7 +9,11 @@ function heads = CH_election(C, portion, energies, locations, distances, do)
     % do: The threshold for determining the path loss exponent @
     %     transmission
 % @ Outputs:
-    % selected_heads: Indecies of the elected heads
+    % assigned_heads: A cell contains 3 columns (the elected heads, number
+    %                 of nodes assigned to each head, a vector of the assigned 
+    %                 nodes to each head)
+    % result_energies: The remaining energies @ each elected head
+
 % ---------------------------------------------------------------------%
 % Constants & Parameters
 E_elec = 50; E_agg = 50; 
@@ -26,9 +30,11 @@ all_possibilities = all_possibilities(randperm(size(all_possibilities, 1)), :);
 for r = 1:size(all_possibilities, 1) % loop over all the possibilities
     heads = all_possibilities(r,:);
     heads_locations = locations(heads, :);
-    assigned_heads = zeros(num_heads,2); assigned_heads(:,1) = heads;
-    
-    % loop over the remaining nodes
+    % assigned_heads = zeros(num_heads,2); assigned_heads(:,1) = heads;
+    assigned_heads = cell(num_heads, 3);
+    assigned_heads(:,1) = num2cell(heads');
+    assigned_heads(:,2) = num2cell(0);
+    % loop over the remaining nodes to assign nodes to heads
     for index = 1:N
         if any(index == heads)
             continue
@@ -36,22 +42,27 @@ for r = 1:size(all_possibilities, 1) % loop over all the possibilities
         node_location = locations(index);
         [~, selected_head] = min(sqrt(sum((heads_locations-node_location).^2,2)));
         % head_row = find(assigned_heads(:,1) == selected_head);
-        assigned_heads(selected_head, 2) = assigned_heads(selected_head, 2) + 1;
-    end    
+        assigned_heads{selected_head, 2} = assigned_heads{selected_head, 2} + 1;
+        assigned_heads{selected_head, 3} = cat(2,assigned_heads{selected_head, 3}, index);
+    end
+    % Refuse the case where a head is not assigned to any nodes
+    if any(cell2mat(assigned_heads(:,2)) == 0)
+        continue
+    end
     % energies after recpetion
-    temp_energies = func_rx_energy(energies(heads),assigned_heads(:,2));
+    result_energies = func_rx_energy(energies(heads),cell2mat(assigned_heads(:,2))');
     % energies after transmission
-    for i = length(heads)
+    for i = 1:length(heads)
         head = heads(i);
-        if distances(head) >= do
-            temp_energies(i) = func_tx_energy(temp_energies(i),eta_long,4,distances(head));
-        else
-            temp_energies(i) = func_tx_energy(temp_energies(i),eta_short,2,distances(head));
+        if distances(head) >= do && assigned_heads{i, 2} ~= 0
+            result_energies(i) = func_tx_energy(result_energies(i),eta_long,4,distances(head));
+        elseif assigned_heads{i, 2} ~= 0
+            result_energies(i) = func_tx_energy(result_energies(i),eta_short,2,distances(head));
         end
     end
 
     % Check the remaining energies
-    if all(temp_energies > 0)
+    if all(result_energies > 0)
         return
     end
 end
