@@ -57,14 +57,14 @@ active_nodes_count =(N);
 active_nodes = (1:N);
 t = 1; %initial time step
 while 1
+t = t+1;
 energy = cat(1, energy, zeros(1,N+1));
     % Elect the heads and decipate their enegies
 num_heads = floor(portion/100 * active_nodes_count(end));
 if num_heads > 0 %condition to go into the election mode
-[assigned_heads,result_energies]  = CH_election(C, active_nodes, num_heads, energy(t,1:end-1), locs(1:end-1,:), dists(1:end-1), d0);
+[assigned_heads,result_energies]  = CH_election(C, active_nodes, num_heads, energy(t-1,1:end-1), locs(1:end-1,:), dists(1:end-1), d0);
 heads = cell2mat(assigned_heads(:,1));
 for j=1:C
-    t = t + 1;
 for head_index = 1:length(heads)
     head = heads(head_index);
     head_loc = locs(head);
@@ -103,7 +103,6 @@ end
 else %end_if
 % Operate in the very normal situation!
 % C = 1;
-t = t + 1;
     for i=1:N
         dist = dists(i);
         if dist <= d0
@@ -124,14 +123,3 @@ t = t + 1;
 
 end %end_if
 end
-
-%% Plotting the number of active nodes per cycle
-
-% remove the first element in the active_nodes vector (intialization)
-active_nodes_count = active_nodes_count(2:end);
-f2 = figure('Name', 'Curve of Active Nodes');
-plot(linspace(1,length(active_nodes_count),length(active_nodes_count)), active_nodes_count);
-grid on
-xlabel('no. of cycle');
-ylabel('no. of active nodes -sink centered');
-title('The number of active nodes at each cycle');
