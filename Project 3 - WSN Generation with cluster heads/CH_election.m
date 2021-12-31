@@ -26,7 +26,7 @@ func_tx_energy = @(E,eta,exp,d) max(0, E - C*((500*8)*(E_elec + E_agg) + (500*8)
 
 
 
-for r = 1:N^C % loop over all the possibilities
+for r = 1:N*C % loop over all the possibilities (it should be N^C instead but we changed it for easier simulation)
     % Get a random sample
     heads = randsample(active_nodes, num_heads);
     heads_locations = locations(heads, :);
