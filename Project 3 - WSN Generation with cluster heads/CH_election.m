@@ -1,4 +1,4 @@
-function [assigned_heads,result_energies] = CH_election(C, portion, energies, locations, distances, do)
+function [assigned_heads,result_energies] = CH_election(C, active_nodes, num_heads, energies, locations, distances, do)
 % This function perform the election of cluster heads.
 % @ Inputs:
     % C: The number of cycles for the heads
@@ -18,17 +18,18 @@ function [assigned_heads,result_energies] = CH_election(C, portion, energies, lo
 % Constants & Parameters
 E_elec = 50; E_agg = 50; 
 eta_short = 10; eta_long = 0.0013;    %nJ/bit/m2;
-N = length(energies);
-num_heads = floor(portion/100 * N);
+k = 625*8; %number_of_bits per cycle
+% num_heads = floor(portion/100 * N);
+N = length(active_nodes);
 % Defining the rx and tx functions
-func_rx_energy = @(E, n) max(0, E - C*(n*500*8*E_elec));
+func_rx_energy = @(E, n) max(0, E - C*(n*k*E_elec));
 func_tx_energy = @(E,eta,exp,d) max(0, E - C*((500*8)*(E_elec + E_agg) + (500*8)*eta*d.^exp));
 
-% Get all the possible combinations & shuffle them
-all_possibilities = nchoosek(1:N, num_heads);
-all_possibilities = all_possibilities(randperm(size(all_possibilities, 1)), :);
-for r = 1:size(all_possibilities, 1) % loop over all the possibilities
-    heads = all_possibilities(r,:);
+
+
+for r = 1:N^C % loop over all the possibilities
+    % Get a random sample
+    heads = randsample(active_nodes, num_heads);
     heads_locations = locations(heads, :);
     % assigned_heads = zeros(num_heads,2); assigned_heads(:,1) = heads;
     assigned_heads = cell(num_heads, 3);
@@ -60,7 +61,6 @@ for r = 1:size(all_possibilities, 1) % loop over all the possibilities
             result_energies(i) = func_tx_energy(result_energies(i),eta_short,2,distances(head));
         end
     end
-
     % Check the remaining energies
     if all(result_energies > 0)
         return
