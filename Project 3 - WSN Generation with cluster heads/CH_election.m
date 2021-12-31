@@ -1,4 +1,4 @@
-function [assigned_heads,result_energies] = CH_election(C, active_nodes, num_heads, energies, locations, distances, do)
+function assigned_heads = CH_election(C, active_nodes, num_heads, energies, locations, distances, do)
 % This function perform the election of cluster heads.
 % @ Inputs:
     % C: The number of cycles for the heads
@@ -12,7 +12,6 @@ function [assigned_heads,result_energies] = CH_election(C, active_nodes, num_hea
     % assigned_heads: A cell contains 3 columns (the elected heads, number
     %                 of nodes assigned to each head, a vector of the assigned 
     %                 nodes to each head)
-    % result_energies: The remaining energies @ each elected head
 
 % ---------------------------------------------------------------------%
 % Constants & Parameters

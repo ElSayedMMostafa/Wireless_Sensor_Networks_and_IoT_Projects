@@ -44,11 +44,6 @@ locs = locs(ids,:);
 %% remove sink to end of vectors
 dists = [dists(2:end); dists(1)];
 locs = [locs(2:end,:); locs(1,:)];
-%% For the cluster heads
-% Get all the possible combinations & shuffle them
-% num_heads = floor(portion/100 * N);
-% all_possibilities = nchoosek(1:N, num_heads);
-% all_possibilities = all_possibilities(randperm(size(all_possibilities, 1)), :);
 %% GO on cycles!
     % Initiate the energy
 energy = E_initial*ones(1,N+1);
@@ -61,7 +56,7 @@ energy = cat(1, energy, zeros(1,N+1));
     % Elect the heads and decipate their enegies
 num_heads = floor(portion/100 * active_nodes_count(end));
 if num_heads > 0 %condition to go into the election mode
-[assigned_heads,result_energies]  = CH_election(C, active_nodes, num_heads, energy(t,1:end-1), locs(1:end-1,:), dists(1:end-1), d0);
+assigned_heads  = CH_election(C, active_nodes, num_heads, energy(t,1:end-1), locs(1:end-1,:), dists(1:end-1), d0);
 heads = cell2mat(assigned_heads(:,1));
 for j=1:C
     t = t + 1;
@@ -121,12 +116,10 @@ t = t + 1;
     if active_nodes_count(end) == 0 || energy(t,N+1) < rx_threshold
         break;
     end
-
 end %end_if
 end
 
 %% Plotting the number of active nodes per cycle
-
 % remove the first element in the active_nodes vector (intialization)
 active_nodes_count = active_nodes_count(2:end);
 f2 = figure('Name', 'Curve of Active Nodes');
