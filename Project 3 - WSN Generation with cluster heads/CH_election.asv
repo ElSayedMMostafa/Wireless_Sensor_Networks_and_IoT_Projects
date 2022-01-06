@@ -31,10 +31,6 @@ for r = 1:N*C
     % Get a random sample
     heads = randsample(active_nodes, num_heads);
     heads_locations = locations(heads, :);
-    heads_distances = distances(heads);
-    if any(heads_distances > 10 + mean(distances(active_nodes))) 
-        continue
-    end
     % assigned_heads = cell[heads, no. assigned nodes,vector of assigned nodes]
     assigned_heads = cell(num_heads, 3);
     assigned_heads(:,1) = num2cell(heads');
@@ -44,15 +40,14 @@ for r = 1:N*C
         if any(index == heads)
             continue
         end
-        node_location = locations(index,:);
+        node_location = locations(index);
         [~, selected_head] = min(sqrt(sum((heads_locations-node_location).^2,2)));
         % head_row = find(assigned_heads(:,1) == selected_head);
         assigned_heads{selected_head, 2} = assigned_heads{selected_head, 2} + 1;
         assigned_heads{selected_head, 3} = cat(2,assigned_heads{selected_head, 3}, index);
     end
-    % ------- after assignment processing ---------- %
     % Refuse the case where a head is not assigned to any nodes
-    if any(cell2mat(assigned_heads(:,2)) == 0) && r ~= N*C
+    if any(cell2mat(assigned_heads(:,2)) == 0)
         continue
     end
     % energies after recpetion

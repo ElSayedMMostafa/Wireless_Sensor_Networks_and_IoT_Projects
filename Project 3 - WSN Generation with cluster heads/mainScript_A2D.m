@@ -12,10 +12,12 @@ E_elec = 50; E_agg = 50;
 k = 625*8; %number_of_bits per cycle
 R = 30;  %threshold for one-hop/dual-hop transmission
 C = 5; portion = 5;
+
+%% Definition of tx and Rx functions
+% Tx for regular nodes
 func_tx_energy = @(E,eta,exp,d) max(0, E - (k*(E_elec + E_agg) + k*eta*d.^exp));
-func_tx_energy_head = @(E,eta,exp,d) max(0, E - ((500*8)*(E_elec + E_agg) + (500*8)*eta*d.^exp));
-func_rx_energy = @(E, n) max(0, E - (n*(500*8)*E_elec));
-func_rx_energy_normal = @(E, n) max(0, E - (n*k*E_elec));
+% Rx from regular nodes
+func_rx_energy = @(E, n) max(0, E - (n*k*E_elec));
 
 %% Generating the location of sensors
 locs = cat(1, randperm(area_width), randperm(area_height))';
@@ -52,21 +54,26 @@ active_nodes_count =(N);
 active_nodes = (1:N);
 t = 1; %initial time step
 while 1
-energy = cat(1, energy, zeros(1,N+1));
+if active_nodes_count(end) > 5
     % Elect the heads and decipate their enegies
-num_heads = floor(portion/100 * active_nodes_count(end));
-if num_heads > 0 %condition to go into the election mode
+    num_heads = ceil(portion/100 * active_nodes_count(end));
+else
+    num_heads = 0;
+end
+energy = cat(1, energy, zeros(1,N+1));
+   
+if num_heads > 0 % condition to go into the election mode
 assigned_heads  = CH_election(C, active_nodes, num_heads, energy(t,1:end-1), locs(1:end-1,:), dists(1:end-1), d0);
 heads = cell2mat(assigned_heads(:,1));
 for j=1:C
     t = t + 1;
 for head_index = 1:length(heads)
     head = heads(head_index);
-    head_loc = locs(head);
+    head_loc = locs(head,:);
     head_dist = dists(head);
     % (1) nodes send to heads
     for node_index = cell2mat(assigned_heads(head_index,3))
-        node = locs(node_index);
+        node = locs(node_index,:);
         distance = sqrt(sum((head_loc-node).^2,2));
         if distance >= d0
             energy(t,node_index) = func_tx_energy(energy(t-1,node_index), eta_long, 4, distance);
@@ -75,12 +82,12 @@ for head_index = 1:length(heads)
         end
     end
     % (2) heads receives from nodes
-    energy(t, head) = func_rx_energy_normal(energy(t-1, head), assigned_heads{head_index,2});
+    energy(t, head) = func_rx_energy(energy(t-1, head), assigned_heads{head_index,2});
     % (3) heads sends to sink
     if head_dist >= d0
-        energy(t, head) = func_tx_energy_head(energy(t, head), eta_long, 4, head_dist);
+        energy(t, head) = func_tx_energy(energy(t, head), eta_long, 4, head_dist);
     else
-        energy(t, head) = func_tx_energy_head(energy(t, head), eta_short, 2, head_dist);
+        energy(t, head) = func_tx_energy(energy(t, head), eta_short, 2, head_dist);
     end
 end
      % (4) sink receives from heads
@@ -89,7 +96,7 @@ end
     % Check energies!
     active_nodes = find(energy(t,1:N) > tx_threshold);
     active_nodes_count = cat(2, active_nodes_count, sum(energy(t,1:N) > tx_threshold));
-    rx_threshold = 500*8*E_elec; %recieve from @ least 1 head
+    rx_threshold = k*E_elec; %recieve from @ least 1 head
     if active_nodes_count(end) == 0 || energy(t,N+1) < rx_threshold
         break;
     end
@@ -98,6 +105,9 @@ end
 else %end_if
 % Operate in the very normal situation!
 % C = 1;
+if active_nodes_count(end) == 0
+    break;
+end
 t = t + 1;
     for i=1:N
         dist = dists(i);
@@ -107,7 +117,7 @@ t = t + 1;
             energy(t,i) = func_tx_energy(energy(t-1,i), eta_long, 4, dist);
         end
     end
-    energy(t,N+1) = func_rx_energy_normal(energy(t-1,N+1), active_nodes(end));
+    energy(t,N+1) = func_rx_energy(energy(t-1,N+1), active_nodes(end));
 
     % Check energies!
     active_nodes = find(energy(t,1:N) > tx_threshold);
@@ -126,7 +136,7 @@ f2 = figure('Name', 'Curve of Active Nodes');
 plot(linspace(1,length(active_nodes_count),length(active_nodes_count)), active_nodes_count);
 grid on
 xlabel('no. of cycle');
-ylabel('no. of active nodes -sink centered');
+ylabel('no. of active nodes');
 title('The number of active nodes at each cycle');
 
 %% Part C: Identifing T1
@@ -139,7 +149,7 @@ hold on
 plot(T1, active_nodes_count(T1),'r*');
 xlabel('no. of cycle');
 ylabel('no. of active nodes');
-legend('no. active nodes','T1');
+legend('no. active nodes','T_1');
 title('The number of active nodes at each cycle');
 %saveas(f3, [pwd '/Figures/curve of active nodes with 1st lifetimes']);
 
@@ -153,14 +163,14 @@ hold off
 grid on
 xlabel('Node Index');
 ylabel('Energy (nJ)');
-title('Remaining energies of the N nodes after T1 cycles - sink centered')
+title('Remaining energies of the N nodes after T_1 cycles')
 %saveas(f4, [pwd '/Figures/Remaining energies of the N nodes after T1 cycles'])
 
 %% Part D: Optimizing C parameter
 Cs = 2:1:40;
 T1s= [];
-for C = Cs
 %% GO on cycles!
+for C = Cs
     % Initiate the energy
 energy = E_initial*ones(1,N+1);
 tx_threshold = 0; %energy threshold for transmitters
@@ -191,12 +201,12 @@ for head_index = 1:length(heads)
         end
     end
     % (2) heads receives from nodes
-    energy(t, head) = func_rx_energy_normal(energy(t-1, head), assigned_heads{head_index,2});
+    energy(t, head) = func_rx_energy(energy(t-1, head), assigned_heads{head_index,2});
     % (3) heads sends to sink
     if head_dist >= d0
-        energy(t, head) = func_tx_energy_head(energy(t, head), eta_long, 4, head_dist);
+        energy(t, head) = func_tx_energy(energy(t, head), eta_long, 4, head_dist);
     else
-        energy(t, head) = func_tx_energy_head(energy(t, head), eta_short, 2, head_dist);
+        energy(t, head) = func_tx_energy(energy(t, head), eta_short, 2, head_dist);
     end
 end
      % (4) sink receives from heads
@@ -222,7 +232,7 @@ t = t + 1;
             energy(t,i) = func_tx_energy(energy(t-1,i), eta_long, 4, dist);
         end
     end
-    energy(t,N+1) = func_rx_energy_normal(energy(t-1,N+1), active_nodes(end));
+    energy(t,N+1) = func_rx_energy(energy(t-1,N+1), active_nodes(end));
 
     % Check energies!
     active_nodes = find(energy(t,1:N) > tx_threshold);
@@ -237,7 +247,7 @@ T1 = find(active_nodes_count < N, 1);
 T1s = cat(2,T1s, T1);
 end % end_Cs
 % Plotting te relation
-f5 = figure('Name','Relation between T_1 and C');
+f5 = figure('Name','Relation between T1 and C');
 stem(Cs, T1s);
 grid on
 xlabel('C');
