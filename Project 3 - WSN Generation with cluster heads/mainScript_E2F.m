@@ -175,6 +175,7 @@ while 1
    num_heads = active_heads_count(end);
    energy = cat(1, energy, zeros(1,N+1));
    heads_energy = cat(1, heads_energy, zeros(1,5));
+   heads_reputation = zeros(1,5);
    for node_index = 1:N
         % select the nearest head
         [dist_to_head, selected_head] = min(sqrt(sum((heads_locs-locs(node_index,:)).^2,2)));
@@ -184,18 +185,21 @@ while 1
         else
             energy(t,node_index) = func_tx_energy(energy(t-1,node_index), eta_short, 2, dist_to_head);
         end
-        % (2) heads receives from nodes
-        heads_energy(t,selected_head) = func_rx_energy(heads_energy(t-1,selected_head), 1);
-        % (3) heads sends to sink
-        head_dist = heads_dists(selected_head);
-        if head_dist >= d0
-            heads_energy(t, selected_head) = func_tx_energy(heads_energy(t, selected_head), eta_long, 4, head_dist);
-        else
-            heads_energy(t, selected_head) = func_tx_energy(heads_energy(t, selected_head), eta_short, 2, head_dist);
-        end
-        % (4) sink receives from heads
-        energy(t,N+1) = func_rx_energy(energy(t-1,N+1), 1);
+        heads_reputation(1,selected_head) = heads_reputation(1,selected_head) + 1;
    end
+   % (2) heads receives from nodes
+   heads_energy(t,:) = func_rx_energy(heads_energy(t-1,:), heads_reputation);
+   % (3) heads sends to sink
+   for head_index = 1:5
+        head_dist = heads_dists(head_index);
+        if head_dist >= d0
+            heads_energy(t, head_index) = func_tx_energy(heads_energy(t, head_index), eta_long, 4, head_dist);
+        else
+            heads_energy(t, head_index) = func_tx_energy(heads_energy(t, head_index), eta_short, 2, head_dist);
+        end
+   end
+   % (4) sink receives from heads
+   energy(t,N+1) = func_rx_energy(energy(t-1,N+1), active_heads_count(end));
    % Check energies!
     active_nodes = find(energy(t,1:N) > tx_threshold);
     active_nodes_count = cat(2, active_nodes_count, sum(energy(t,1:N) > tx_threshold));
@@ -206,7 +210,6 @@ while 1
     % Check the remaining heads
     active_heads = find(heads_energy(t,1:5) > heads_energy_threshold);
     active_heads_count = cat(2, active_heads_count, sum(heads_energy(t,1:5) > heads_energy_threshold));
-T_end_clusters = t; % save this for later!
  else %else_if
     % Operate in the very normal situation!
     for i=1:N
