@@ -27,12 +27,13 @@ func_tx_energy = @(E,eta,exp,d) max(0, E - C*(k*(E_elec + E_agg) + k*eta*d.^exp)
 % ---------------------------------------------------------------------%
 
  % loop over all the possibilities (it should be N^C instead but we changed it for easier simulation)
-for r = 1:N*C
+while 1
     % Get a random sample
     heads = randsample(active_nodes, num_heads);
     heads_locations = locations(heads, :);
     heads_distances = distances(heads);
-    if any(heads_distances > 10 + mean(distances(active_nodes))) 
+    %if any(heads_distances >  mean(distances(active_nodes))) 
+    if any(heads_distances >  35) 
         continue
     end
     % assigned_heads = cell[heads, no. assigned nodes,vector of assigned nodes]
@@ -52,7 +53,7 @@ for r = 1:N*C
     end
     % ------- after assignment processing ---------- %
     % Refuse the case where a head is not assigned to any nodes
-    if any(cell2mat(assigned_heads(:,2)) == 0) && r ~= N*C
+    if any(cell2mat(assigned_heads(:,2)) == 0) %&& r ~= N*C
         continue
     end
     % energies after recpetion

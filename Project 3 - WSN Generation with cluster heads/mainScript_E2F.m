@@ -36,7 +36,7 @@ legend('source', 'heads','sink');
 title('Network Topology with special heads');
 xlabel('distance on x-axis');
 ylabel('distance on y-axis');
-% saveas(f1, [pwd '/Figures/network_topology_with_special_heads']);
+ saveas(f1, [pwd '/Figures/network_topology_with_special_heads']);
 %% Calculate the distances
 dists = sqrt(sum((locs-[50 50]).^2,2));
 heads_dists = sqrt(sum((heads_locs-[50 50]).^2,2));
@@ -125,7 +125,7 @@ grid on
 xlabel('no. of cycle');
 ylabel('no. of active nodes');
 title('The number of active nodes at each cycle');
-
+saveas(f2, [pwd '/Figures/The number of active nodes at each cycle - Dedicated Heads'],'fig')
 %% Part C: Identifing T1
 % Find the lifetime T1
 T1 = find(active_nodes_count < N, 1);
@@ -138,7 +138,7 @@ xlabel('no. of cycle');
 ylabel('no. of active nodes');
 legend('no. active nodes','T_1');
 title('The number of active nodes at each cycle');
-%saveas(f3, [pwd '/Figures/curve of active nodes with 1st lifetimes']);
+saveas(f3, [pwd '/Figures/curve of active nodes with 1st lifetimes - Dedicated Heads']);
 
 %% Plotting the remaining energies at T1 cycles
 energy_T1 = energy(T1+1, :);
@@ -151,7 +151,7 @@ grid on
 xlabel('Node Index');
 ylabel('Energy (nJ)');
 title('Remaining energies of the N nodes after T_1 cycles')
-%saveas(f4, [pwd '/Figures/Remaining energies of the N nodes after T1 cycles'])
+saveas(f4, [pwd '/Figures/Remaining energies of the N nodes after T1 cycles - Dedicated Heads'])
 
 %% Part D: Optimizing R parameter
 Rs = 5:1:50*sqrt(2);
@@ -241,5 +241,5 @@ grid on
 xlabel('R');
 ylabel('T_1');
 title('Relation between T_1 and R')
-%saveas(f5, [pwd '/Figures/Relation between T1 and R'])
+saveas(f5, [pwd '/Figures/Relation between T1 and R'])
 

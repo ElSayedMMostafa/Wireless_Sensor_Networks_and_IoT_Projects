@@ -1,6 +1,8 @@
 clear; clc; close all;
-rng(24); %set the random seed!
 
+%bestC =[];
+
+rng(24); %set the random seed!
 %% WSN Parameters
 N = 100; %The number of sensors
 area_width = 100;  area_height = 100;
@@ -36,7 +38,7 @@ legend('source', 'sink');
 title('Network Topology - sink centered');
 xlabel('distance on x-axis');
 ylabel('distance on y-axis');
-% saveas(f1, [pwd '/Figures/network_topology_Sink_Centered']);
+saveas(f1, [pwd '/Figures/network_topology_Sink_Centered and Heads Elected']);
 %% Calculate the distances
 dists = sqrt(sum((locs-[50 50]).^2,2));
 %% Sort Nodes according to Distances
@@ -53,7 +55,7 @@ active_nodes_count =(N);
 active_nodes = (1:N);
 t = 1; %initial time step
 while 1
-if active_nodes_count(end) > 5
+if active_nodes_count(end) > 2
     % Elect the heads and decipate their enegies
     num_heads = ceil(portion/100 * active_nodes_count(end));
 else
@@ -137,7 +139,7 @@ grid on
 xlabel('no. of cycle');
 ylabel('no. of active nodes');
 title('The number of active nodes at each cycle');
-
+saveas(f2, [pwd '/Figures/The number of active nodes at each cycle - Heads Elected'],'fig')
 %% Part C: Identifing T1
 % Find the lifetime T1
 T1 = find(active_nodes_count < N, 1);
@@ -150,7 +152,7 @@ xlabel('no. of cycle');
 ylabel('no. of active nodes');
 legend('no. active nodes','T_1');
 title('The number of active nodes at each cycle');
-%saveas(f3, [pwd '/Figures/curve of active nodes with 1st lifetimes']);
+saveas(f3, [pwd '/Figures/curve of active nodes with 1st lifetimes - Heads Elected']);
 
 %% Plotting the remaining energies at T1 cycles
 energy_T1 = energy(T1+1, :);
@@ -163,10 +165,13 @@ grid on
 xlabel('Node Index');
 ylabel('Energy (nJ)');
 title('Remaining energies of the N nodes after T_1 cycles')
-%saveas(f4, [pwd '/Figures/Remaining energies of the N nodes after T1 cycles'])
+saveas(f4, [pwd '/Figures/Remaining energies of the N nodes after T1 cycles - Heads Elected'])
 
 %% Part D: Optimizing C parameter
-Cs = 2:1:40;
+tic;
+Ts = zeros(1,50);
+for cy = 1:50
+Cs = 1:50;
 T1s= [];
 %% GO on cycles!
 for C = Cs
@@ -245,12 +250,23 @@ end
 T1 = find(active_nodes_count < N, 1);
 T1s = cat(2,T1s, T1);
 end % end_Cs
+Ts = [Ts;T1s];
 % Plotting te relation
-f5 = figure('Name','Relation between T1 and C');
-stem(Cs, T1s);
+% f5 = figure('Name','Relation between T1 and C');
+% stem(Cs, T1s);
+% grid on
+% xlabel('C');
+% ylabel('T_1');
+% title('Relation between T_1 and C')
+%saveas(f5, [pwd '/Figures/Relation between T1 and C'])
+%bestC = [bestC, Cs(find(T1s == max(T1s),1))];
+end
+toc
+%%
+meanT1 = mean(Ts(1:end,:),1);
+f5 = figure('Name','Relation between avgT1 and C');
+stem(Cs, meanT1);
 grid on
 xlabel('C');
 ylabel('T_1');
 title('Relation between T_1 and C')
-%saveas(f5, [pwd '/Figures/Relation between T1 and C'])
-
